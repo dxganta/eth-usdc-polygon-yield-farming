@@ -80,9 +80,7 @@ contract MyStrategy is BaseStrategy {
 
     /// @dev Balance of want currently held in strategy positions
     function balanceOfPool() public override view returns (uint256) {
-        return IStakingRewards(STAKING_REWARDS).balanceOf(address(this))
-        .add(balanceOfToken(usdc))
-        .add(balanceOfToken(weth));
+        return IStakingRewards(STAKING_REWARDS).balanceOf(address(this));
     }
 
     function balanceOfToken(address _token) public view returns (uint256) {
@@ -150,18 +148,6 @@ contract MyStrategy is BaseStrategy {
         return IStakingRewards(STAKING_REWARDS).earned(address(this));
     }
 
-    function testDeposit(uint256 _amount) external {
-        _deposit(_amount);
-    }
-
-    function testWithdraw() external {
-        _withdrawAll();
-    }
-
-    function testRewards() external {
-        IStakingRewards(STAKING_REWARDS).getReward();
-    }
-
     /// @dev Harvest from strategy mechanics, realizing increase in underlying position
     function harvest() external whenNotPaused returns (uint256 harvested) {
         _onlyAuthorizedActors();
@@ -189,11 +175,6 @@ contract MyStrategy is BaseStrategy {
         emit Harvest(earned, block.number);
 
         return earned;
-    }
-
-    // Alternative Harvest with Price received from harvester, used to avoid exessive front-running
-    function harvest(uint256 price) external whenNotPaused returns (uint256 harvested) {
-
     }
 
     /// @dev Rebalance, Compound or Pay off debt here

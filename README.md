@@ -1,37 +1,130 @@
-# Badger Strategy V1 Brownie Mix
-
-- Video Introduction: https://youtu.be/FVbhgPYW_D0
-
-- Example Project: https://github.com/Badger-Finance/wBTC-AAVE-Rewards-Farm-Badger-V1-Strategy
-- Full Project Walkthrough: https://www.youtube.com/watch?v=lTb0RFJJx2k
-- 1-1 Mentoring (Valid throughout HackMoney and Gitcoin Round 10): https://calendly.com/alex-entreprenerd/badger-hackmoney-1-1
-
-## What you'll find here
-
-- Basic Solidity Smart Contract for creating your own Badger Strategy ([`contracts/MyStrategy.sol`](contracts/MyStrategy.sol))
-
-- Interfaces for some of the most used DeFi protocols on ethereum mainnet. ([`interfaces`](interfaces))
-- Dependencies for OpenZeppelin and other libraries. ([`deps`](deps))
-
-- Sample test suite that runs on mainnet fork. ([`tests`](tests))
+# Quickswap WETH-USDC Liquidity Pool Yield Farming (Polygon Mainnet)
 
 This mix is configured for use with [Ganache](https://github.com/trufflesuite/ganache-cli) on a [forked mainnet](https://eth-brownie.readthedocs.io/en/stable/network-management.html#using-a-forked-development-network).
 
+## How it Works
+### Deposit
+The Strategy takes Quickswap's Quick-v2 WETH-USDC Liquidity Pool tokens as deposit and stakes them for yield generation. You can get Quick-v2 WETH-USDC tokens [here](https://quickswap.exchange/#/add/0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619/0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).
+### Harvest & Compounding
+Including the APY from providing liquidity in the WETH-USDC pool, the user also gets QUICK rewards for staking the WETH-USDC LP tokens.
+
+The strategy converts the QUICK tokens to 50% WETH & 50% USDC. Then it adds them to the WETH-USDC Liquidity Pool on Quickswap for WETH-USDC LP Tokens. 
+
+These WETH-USDC LP Tokens are then reinvested back into the strategy further yield generation.
+### Withdrawing Funds
+On withdraw call, the strategy simply unstakes the WETH-USDC tokens and returns them back to the user based on the number of vault shares that the user owns.
+
+## Expected Yield
+
+As of July 3, 2021
+
+Rewards -> (80 Quick Per day) 13.18% APY <br>
+Fees -> 14.76% APY
+
+Total -> <strong>27.94%</strong>
+
+Note: One very notable point about this pool is the high fees APY which means that there is high volume going through the pool everyday. This is a very big pool with 111 M dollars TVL. Just few days ago the Fees APY was at 30%. With increasing deposits in the pool, though the rewards APY will decrease, the user can still enjoy high Fees APY which will only keep increasing with increasing Volume in this Pool.
+
+## Usage
+
+### For Users (Callable by anyone)
+A user just has to call the <strong>deposit()</strong> function in the Vault Contract to deposit his DAI. The Vault will provide him the required number of Vault Shares.
+
+To withdraw his funds, the user just has to call the <strong>withdraw()</strong> function with the number of Vault shares he wants to liquidate and the Vault will return his deserved DAI as per the Vault shares.
+
+(Ofcourse the user won't call the functions directly, but through a frontend component which will implement the above 2 functions through 2 buttons namely <strong>DEPOSIT</strong> & <strong>WITHDRAW</strong>)
+
+### For Force Team (Below functions can only be called by authorized accounts)
+The Force Team has to call the <strong>earn()</strong> function in the Vault Contract to deposit the DAI from the Vault Contract into the Strategy to start yield generation.
+
+There is a <strong>harvest()</strong> function in the Strategy Contract which has to be called periodically by the Force Team (generally every month or week) to realize the WMATIC/CRV rewards & convert it to DAI.
+
+After the harvest() you may call the <strong>tend()</strong> function which will deposit any idle DAI held by the strategy contract back into the pools for yield generation.
+
+(Ofcourse all the conversions & deposits are automated inside the strategy, you just have to call the above 3 functions)
+
+## Documentation
+A general template for the Strategy, Controller, Vault has generated from https://github.com/GalloDaSballo/badger-strategy-mix-v1
+
+### The Vault Contract ([/contracts/deps/SettV3.sol](https://github.com/realdiganta/dbr-aave-polygon-strategy/blob/main/contracts/deps/SettV3.sol)) has 3 prime functions
+
+<strong>deposit(uint256 _amount)</strong>
+```
+params: (_amount) => Amount of DAI
+
+info: Deposits DAI into the Vault Contract & returns corresponding shares to the user
+access: public
+```
+
+<strong>withdraw(uint256 _shares)</strong>
+```
+params: (_shares) => Number of Vault Shares held by user
+
+info: Takes the shares from the user, burns them & returns corresponding DAI to the user
+access: public
+```
+
+<strong>earn()</strong>
+```
+info: Deposits the DAI held by the Vault Contract to the controller. The Controller will then deposit into the Strategy for yield-generation.
+
+access: Only Authorized Actors
+```
+<br>
+
+### The Controller Contract ([/contracts/deps/Controller.sol](https://github.com/realdiganta/dbr-aave-polygon-strategy/blob/main/contracts/deps/Controller.sol))
+The prime function of the Controller is to set, approve & remove Strategies for the Vault and act as a middleman between the Vault & the strategy(ies).
+<br><br>
+### The Strategy Contract ([/contracts/MyStrategy.sol](https://github.com/realdiganta/dbr-aave-polygon-strategy/blob/main/contracts/MyStrategy.sol)) :
+ 
+<strong>deposit()</strong>
+```
+info: Deposits all DAI held by the strategy into the AAVE & Curve Pools (converting them into USDC & USDT as required) for yield generation.
+
+access: Only Authorized Actors & Controller Contract.
+```
+
+<strong> harvest()</strong>
+```
+info: realizes Matic & Curve rewards and converts them to DAI.
+
+access: Only Authorized Actors
+```
+
+<strong>tend()</strong>
+```
+info: reinvests the DAI held by the strategy back into the pools. Generally to be called after the harvest() function.
+
+access: Only Authorized Actors
+```
+
+<strong>withdraw(uint256 _amount)</strong>
+```
+params: (_amount) => _amount in DAI to withdraw
+
+info: withdraws funds from the strategy, unrolling from strategy positions as necessary
+access: Only Controller
+```
+
+<strong>withdrawAll()</strong>
+```
+info: withdraws all the funds from the strategy.
+
+access: Only Controller
+```
+
+<strong>changeAllocations(uint16[4] _allocations)</strong>
+```
+params: (_allocations) => list of allocations for the different pools. (where 100 will be 10%) with order being [dai, usdc, usdt, curve]
+
+info: The values in the list must add up to 1000. This function may typically be called by the strategist when the APYs in the various pools changes to have a better allocation of the funds of the strategy for higher net APY.
+
+access: Only Authorized Actors
+```
+
 ## Installation and Setup
 
-1. Use this code by clicking on Use This Template
-
-2. Download the code with ```git clone URL_FROM_GITHUB```
-
-3. [Install Brownie](https://eth-brownie.readthedocs.io/en/stable/install.html) & [Ganache-CLI](https://github.com/trufflesuite/ganache-cli), if you haven't already.
-
-4. Copy the `.env.example` file, and rename it to `.env`
-
-5. Sign up for [Infura](https://infura.io/) and generate an API key. Store it in the `WEB3_INFURA_PROJECT_ID` environment variable.
-
-6. Sign up for [Etherscan](www.etherscan.io) and generate an API key. This is required for fetching source codes of the mainnet contracts we will be interacting with. Store the API key in the `ETHERSCAN_TOKEN` environment variable.
-
-7. Install the dependencies in the package
+Install the dependencies in the package
 ```
 ## Javascript dependencies
 npm i
@@ -45,22 +138,25 @@ pip install -r requirements.txt
 
 ## Basic Use
 
-To deploy the demo Badger Strategy in a development environment:
+To deploy the Strategy in a development environment:
 
-1. Open the Brownie console. This automatically launches Ganache on a forked mainnet.
-
-```bash
-  brownie console
+1. Compile the contracts 
+```
+  brownie compile
 ```
 
 2. Run Scripts for Deployment
 ```
   brownie run deploy
 ```
-
 Deployment will set up a Vault, Controller and deploy your strategy
 
-3. Run the test deployment in the console and interact with it
+3. Testing. To run all the tests in the tests folder 
+``` 
+brownie test
+```
+
+4. Run the test deployment in the console and interact with it
 ```python
   brownie console
   deployed = run("deploy")
@@ -75,7 +171,6 @@ Deployment will set up a Vault, Controller and deploy your strategy
   {
       'controller': 0x602C71e4DAC47a042Ee7f46E0aee17F94A3bA0B6,
       'deployer': 0x66aB6D9362d4F35596279692F0251Db635165871,
-      'lpComponent': 0x028171bCA77440897B824Ca71D1c56caC55b68A3,
       'rewardToken': 0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9,
       'sett': 0x6951b5Bd815043E3F842c1b026b0Fa888Cc2DD85,
       'strategy': 0x9E4c14403d7d9A8A782044E86a93CAE09D7B2ac9,
@@ -89,103 +184,9 @@ Deployment will set up a Vault, Controller and deploy your strategy
   240545908911436022026
 
 ```
-
-## Adding Configuration
-
-To ship a valid strategy, that will be evaluated to deploy on mainnet, with potentially $100M + in TVL, you need to:
-1. Add custom config in `/config/__init__.py`
-2. Write the Strategy Code in MyStrategy.sol
-3. Customize the StrategyResolver in `/config/StrategyResolver.py` so that snapshot testing can verify that operations happened correctly
-4. Write any extra test to confirm that the strategy is working properly
-
-## Add a custom want configuration
-Most strategies have a:
-* **want** the token you want to increase the balance of
-* **lpComponent** the token representing how much you deposited in the yield source
-* **reward** the token you are farming, that you'll swap into **want**
-
-Set these up in `/config/__init__.py` this mix will automatically be set up for testing and deploying after you do so
-
-## Implementing Strategy Logic
-
-[`contracts/MyStrategy.sol`](contracts/MyStrategy.sol) is where you implement your own logic for your strategy. In particular:
-
-* Customize the `initialize` Method
-* Set a name in `MyStrategy.getName()`
-* Set a version in `MyStrategy.version()`
-* Write a way to calculate the want invested in `MyStrategy.balanceOfPool()`
-* Write a method that returns true if the Strategy should be tended in `MyStrategy.isTendable()`
-* Set a version in `MyStrategy.version()`
-* Invest your want tokens via `Strategy._deposit()`.
-* Take profits and repay debt via `Strategy.harvest()`.
-* Unwind enough of your position to payback withdrawals via `Strategy._withdrawSome()`.
-* Unwind all of your positions via `Strategy._withdrawAll()`.
-* Rebalance the Strategy positions via `Strategy.tend()`.
-* Make a list of all position tokens that should be protected against movements via `Strategy.protectedTokens()`.
-
-## Specifying checks for ordinary operations in config/StrategyResolver
-In order to snapshot certain balances, we use the Snapshot manager.
-This class helps with verifying that ordinary procedures (deposit, withdraw, harvest), happened correctly.
-
-See `/helpers/StrategyCoreResolver.py` for the base resolver that all strategies use
-Edit `/config/StrategyResolver.py` to specify and verify how an ordinary harvest should behave
-
-### StrategyResolver
-
-* Add Contract to check balances for in `get_strategy_destinations` (e.g. deposit pool, gauge, lpTokens)
-* Write `confirm_harvest` to verify that the harvest was profitable
-* Write `confirm_tend` to verify that tending will properly rebalance the strategy
-* Specify custom checks for ordinary deposits, withdrawals and calls to `earn` by setting up `hook_after_confirm_withdraw`, `hook_after_confirm_deposit`, `hook_after_earn`
-
-## Add your custom testing
-Check the various tests under `/tests`
-The file `/tests/test_custom` is already set up for you to write custom tests there
-See example tests in `/tests/examples`
-All of the tests need to pass!
-If a test doesn't pass, you better have a great reason for it!
-
-## Testing
-
-To run the tests:
-
-```
-brownie test
-```
-
-
-## Debugging Failed Transactions
-
-Use the `--interactive` flag to open a console immediatly after each failing test:
-
-```
-brownie test --interactive
-```
-
-Within the console, transaction data is available in the [`history`](https://eth-brownie.readthedocs.io/en/stable/api-network.html#txhistory) container:
-
-```python
->>> history
-[<Transaction '0x50f41e2a3c3f44e5d57ae294a8f872f7b97de0cb79b2a4f43cf9f2b6bac61fb4'>,
- <Transaction '0xb05a87885790b579982983e7079d811c1e269b2c678d99ecb0a3a5104a666138'>]
-```
-
-Examine the [`TransactionReceipt`](https://eth-brownie.readthedocs.io/en/stable/api-network.html#transactionreceipt) for the failed test to determine what went wrong. For example, to view a traceback:
-
-```python
->>> tx = history[-1]
->>> tx.traceback()
-```
-
-To view a tree map of how the transaction executed:
-
-```python
->>> tx.call_trace()
-```
-
-See the [Brownie documentation](https://eth-brownie.readthedocs.io/en/stable/core-transactions.html) for more detailed information on debugging failed transactions.
-
-
 ## Deployment
+
+You can have a look at the deployment script at (/scripts/deploy.py)
 
 When you are finished testing and ready to deploy to the mainnet:
 
@@ -197,22 +198,3 @@ $ brownie run deployment --network mainnet
 ```
 
 You will be prompted to enter your keystore password, and then the contract will be deployed.
-
-
-## Known issues
-
-### No access to archive state errors
-
-If you are using Ganache to fork a network, then you may have issues with the blockchain archive state every 30 minutes. This is due to your node provider (i.e. Infura) only allowing free users access to 30 minutes of archive state. To solve this, upgrade to a paid plan, or simply restart your ganache instance and redploy your contracts.
-
-# Resources
-- Example Strategy https://github.com/Badger-Finance/wBTC-AAVE-Rewards-Farm-Badger-V1-Strategy
-- Badger Builders Discord https://discord.gg/Tf2PucrXcE
-- Badger [Discord channel](https://discord.gg/phbqWTCjXU)
-- Yearn [Discord channel](https://discord.com/invite/6PNv2nF/)
-- Brownie [Gitter channel](https://gitter.im/eth-brownie/community)
-- Alex The Entreprenerd on [Twitter](https://twitter.com/GalloDaSballo)
-
-
-# Notes
-- Change the defaultBalance to 100000 ether since in the polygonscan gas is measured in matic and the default value of 100 Matic is too low.
