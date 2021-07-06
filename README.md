@@ -10,15 +10,15 @@ Including the APY from providing liquidity in the WETH-USDC pool, the user also 
 
 The strategy converts the QUICK tokens to 50% WETH & 50% USDC. Then it adds them to the WETH-USDC Liquidity Pool on Quickswap for WETH-USDC LP Tokens. 
 
-These WETH-USDC LP Tokens are then reinvested back into the strategy further yield generation.
+These WETH-USDC LP Tokens are then reinvested back into the strategy for further yield generation.
 ### Withdrawing Funds
 On withdraw call, the strategy simply unstakes the WETH-USDC tokens and returns them back to the user based on the number of vault shares that the user owns.
 
-## Expected Yield
+## [Expected Yield](https://quickswap.exchange/#/quick)
 
 As of July 3, 2021
 
-Rewards -> (80 Quick Per day) 13.18% APY <br>
+Rewards -> 13.18% APY <br>
 Fees -> 14.76% APY
 
 Total -> <strong>27.94%</strong>
