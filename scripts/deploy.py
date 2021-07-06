@@ -100,7 +100,7 @@ def deploy():
             WETH],
         deployer,
         9999999999999999,
-        {"from": deployer, "value": 5000 * 10**18}
+        {"from": deployer, "value": 50 * 10**18}
     )
 
     # MATIC -> USDC
@@ -109,7 +109,7 @@ def deploy():
         ["0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", USDC],
         deployer,
         9999999999999999,
-        {"from": deployer, "value": 5000 * 10**18}
+        {"from": deployer, "value": 50 * 10**18}
     )
 
     # # Swap them from WETH-USDC
