@@ -18,14 +18,14 @@ On withdraw call, the strategy simply unstakes the WETH-USDC tokens and returns 
 
 ## [Expected Yield](https://quickswap.exchange/#/quick)
 
-As of July 3, 2021
+As of July 7, 2021
 
-Rewards -> 13.18% APY <br>
-Fees -> 14.76% APY
+Rewards -> 14.61% APY <br>
+Fees -> 27.47% APY
 
-Total -> <strong>27.94%</strong>
+Total -> <strong>42.08% APY</strong>
 
-Note: One very notable point about this pool is the high fees APY which means that there is high volume going through the pool everyday. This is a very big pool with 111 M dollars TVL. Just few days ago the Fees APY was at 30%. With increasing deposits in the pool, though the rewards APY will decrease, the user can still enjoy high Fees APY which will only keep increasing with increasing Volume in this Pool.
+Note: One very notable point about this pool is the high fees APY which means that there is high volume going through the pool everyday. This is a very big pool with 111 M dollars TVL. With increasing deposits in the pool, though the rewards APY will decrease, the user can still enjoy high Fees APY which will only keep increasing with increasing Volume in this Pool.
 
 ## Usage
 
@@ -113,15 +113,6 @@ access: Only Controller
 info: withdraws all the funds from the strategy.
 
 access: Only Controller
-```
-
-<strong>changeAllocations(uint16[4] _allocations)</strong>
-```
-params: (_allocations) => list of allocations for the different pools. (where 100 will be 10%) with order being [dai, usdc, usdt, curve]
-
-info: The values in the list must add up to 1000. This function may typically be called by the strategist when the APYs in the various pools changes to have a better allocation of the funds of the strategy for higher net APY.
-
-access: Only Authorized Actors
 ```
 
 ## Installation and Setup
