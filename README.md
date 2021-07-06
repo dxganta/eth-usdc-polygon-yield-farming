@@ -2,9 +2,11 @@
 
 This mix is configured for use with [Ganache](https://github.com/trufflesuite/ganache-cli) on a [forked mainnet](https://eth-brownie.readthedocs.io/en/stable/network-management.html#using-a-forked-development-network).
 
+<img src="https://user-images.githubusercontent.com/47485188/124618033-0fb5d400-de95-11eb-8ab0-1fd73bad6df4.png"></img>
+
 ## How it Works
 ### Deposit
-The Strategy takes Quickswap's Quick-v2 WETH-USDC Liquidity Pool tokens as deposit and stakes them for yield generation. You can get Quick-v2 WETH-USDC tokens [here](https://quickswap.exchange/#/add/0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619/0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).
+The Strategy takes Quickswap's Quick-v2 WETH-USDC Liquidity Pool tokens as deposit and stakes them on Quickswap for yield generation. You can get Quick-v2 WETH-USDC tokens [here](https://quickswap.exchange/#/add/0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619/0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174).
 ### Harvest & Compounding
 Including the APY from providing liquidity in the WETH-USDC pool, the user also gets QUICK rewards for staking the WETH-USDC LP tokens.
 
